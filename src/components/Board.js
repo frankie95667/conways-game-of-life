@@ -1,6 +1,6 @@
 import React, { Fragment, useEffect, useRef } from "react";
 import Sketch from "react-p5";
-import { useImmer } from 'use-immer';
+import { useImmer } from "use-immer";
 
 export default (props) => {
   const intervals = useRef(100);
@@ -14,11 +14,10 @@ export default (props) => {
   let timeInterval;
 
   useEffect(() => {
-    const intervalInput = document.getElementById('interval-input');
+    const intervalInput = document.getElementById("interval-input");
     intervalInput.setAttribute("value", intervals.current);
-  }, [])
+  }, []);
 
-  
   const setup = (p5, canvasParentRef) => {
     p5.createCanvas(600, 600).parent(canvasParentRef);
     columns = p5.width / w;
@@ -37,36 +36,36 @@ export default (props) => {
     }
     setGameInterval();
   };
-  
+
   const draw = (p5) => {
     p5.background(240);
-    
+
     for (let x = 0; x < columns; x++) {
       for (let y = 0; y < rows; y++) {
         let xpos = x * w;
         let ypos = y * w;
-        
+
         if (board[x][y]) {
           p5.fill(0);
         } else {
           p5.fill(255);
         }
-        
+
         p5.stroke(0);
         p5.rect(xpos, ypos, w, w);
       }
     }
-    
+
     p5.colorMode(p5.RGB);
   };
-  
+
   const setGameInterval = () => {
     timeInterval = setInterval(() => {
       if (start.current) {
         generate();
       }
     }, intervals.current);
-  }
+  };
 
   function insideBoard(p5) {
     if (
@@ -130,9 +129,9 @@ export default (props) => {
   }
 
   const updateGeneration = () => {
-    const generationText = document.getElementById('generation');
+    const generationText = document.getElementById("generation");
     generationText.textContent = "Generation: " + generation.current;
-  }
+  };
 
   const postToCellCoords = (w, pos) => {
     return Math.floor(pos / w);
@@ -141,27 +140,43 @@ export default (props) => {
   const handleButtonClick = (e) => {
     e.preventDefault();
     start.current = !start.current;
-    console.log(start.current);
-    const button = document.getElementById('start-stop')
-    if(start.current){
-      button.textContent = "Stop"
+    const button = document.getElementById("start-stop");
+    const reset = document.getElementById("reset-btn");
+    reset.toggleAttribute("disabled")
+    if (start.current) {
+      button.textContent = "Stop";
     } else {
-      button.textContent = "Start"
+      button.textContent = "Start";
     }
-  }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     clearInterval(timeInterval);
     setGameInterval();
-  }
+  };
 
   const handleChange = (e) => {
-    intervals.current = Number(e.target.value)
-  }
+    intervals.current = Number(e.target.value);
+  };
+
+  const resetBoard = () => {
+    if (!start.current) {
+      for (let x = 0; x < columns; x++) {
+        for (let y = 0; y < rows; y++) {
+          board[x][y] = 0;
+          next[x][y] = 0;
+        }
+      }
+      generation.current = 0;
+      setGameInterval();
+    }
+  };
 
   return (
     <Fragment>
+      <p>Select the squares on the grid to set the cell as either dead or alive. You can even drag the mouse to select many cells at a time.</p>
+      <p>After your done, you can press Start and watch as your cells come to life.</p>
       <Sketch
         setup={setup}
         draw={draw}
@@ -169,11 +184,15 @@ export default (props) => {
         mouseDragged={mouseDragged}
       />
       <h4 id="generation">Generation: {generation.current}</h4>
-      <button id="start-stop" onClick={handleButtonClick}>Start</button>
+      <button id="start-stop" onClick={handleButtonClick}>
+        Start
+      </button>
       <form onSubmit={handleSubmit}>
-        <input name="interval" id="interval-input" onChange={handleChange}/>
+        <label htmlFor="interval-input">Set Interval</label>
+        <input name="interval" id="interval-input" onChange={handleChange} />
         <button type="submit">Save</button>
       </form>
+      <button id="reset-btn" onClick={resetBoard}>Reset</button>
     </Fragment>
   );
 };
