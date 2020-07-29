@@ -169,7 +169,7 @@ export default (props) => {
         }
       }
       generation.current = 0;
-      setGameInterval();
+      updateGeneration();
     }
   };
 
