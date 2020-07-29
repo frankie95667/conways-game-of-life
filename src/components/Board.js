@@ -1,6 +1,9 @@
 import React, { Fragment, useEffect, useRef } from "react";
 import Sketch from "react-p5";
-import { useImmer } from "use-immer";
+import oscillators from "../helpers/oscillators";
+import stillLife from "../helpers/still-lifes";
+import spaceships from "../helpers/spaceships";
+import randomBoard from "../helpers/random-board";
 
 export default (props) => {
   const intervals = useRef(100);
@@ -114,8 +117,8 @@ export default (props) => {
         }
 
         neighbors -= board[x][y];
-        if ((board[x][y] === 1 && neighbors < 2) || neighbors > 3)
-          next[x][y] = 0;
+        if (board[x][y] === 1 && neighbors < 2) next[x][y] = 0;
+        else if (board[x][y] === 1 && neighbors > 3) next[x][y] = 0;
         else if (board[x][y] === 0 && neighbors === 3) next[x][y] = 1;
         else next[x][y] = board[x][y];
       }
@@ -140,15 +143,42 @@ export default (props) => {
   const handleButtonClick = (e) => {
     e.preventDefault();
     start.current = !start.current;
+
+    // assign button elements to variables
     const button = document.getElementById("start-stop");
+    const stepBtn = document.getElementById("step-btn");
     const reset = document.getElementById("reset-btn");
-    reset.toggleAttribute("disabled")
+   
     if (start.current) {
       button.textContent = "Stop";
+      reset.setAttribute("disabled", true);
+      stepBtn.setAttribute("disabled", true);
+      toggleGeneratorButtons(true);
     } else {
       button.textContent = "Start";
+      reset.removeAttribute("disabled");
+      stepBtn.removeAttribute("disabled");
     }
   };
+
+  const toggleGeneratorButtons = (set=false) => {
+    const oscillatorBtn = document.getElementById("oscillator-btn");
+    const stillLifeBtn = document.getElementById("still-life-btn");
+    const spaceshipBtn = document.getElementById("spaceship-btn");
+    const randomBtn = document.getElementById("random-btn");
+
+    if(set){
+      oscillatorBtn.setAttribute("disabled", true);
+      stillLifeBtn.setAttribute("disabled", true);
+      spaceshipBtn.setAttribute("disabled", true);
+      randomBtn.setAttribute("disabled", true);
+    } else {
+      oscillatorBtn.removeAttribute("disabled");
+      stillLifeBtn.removeAttribute("disabled");
+      spaceshipBtn.removeAttribute("disabled");
+      randomBtn.removeAttribute("disabled");
+    }
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -170,13 +200,36 @@ export default (props) => {
       }
       generation.current = 0;
       updateGeneration();
+      toggleGeneratorButtons();
     }
+  };
+
+  const generateOscillators = () => {
+    board = oscillators(columns, rows);
+  };
+
+  const generateStillLife = () => {
+    board = stillLife(columns, rows);
+  };
+
+  const generateSpaceships = () => {
+    board = spaceships(columns, rows);
+  };
+
+  const generateRandom = () => {
+    board = randomBoard(columns, rows);
   };
 
   return (
     <Fragment>
-      <p>Select the squares on the grid to set the cell as either dead or alive. You can even drag the mouse to select many cells at a time.</p>
-      <p>After your done, you can press Start and watch as your cells come to life.</p>
+      <p>
+        Select the squares on the grid to set the cell as either dead or alive.
+        You can even drag the mouse to select many cells at a time.
+      </p>
+      <p>
+        After your done, you can press Start and watch as your cells come to
+        life.
+      </p>
       <Sketch
         setup={setup}
         draw={draw}
@@ -187,12 +240,29 @@ export default (props) => {
       <button id="start-stop" onClick={handleButtonClick}>
         Start
       </button>
+      <button id="step-btn" onClick={generate}>
+        Step
+      </button>
       <form onSubmit={handleSubmit}>
         <label htmlFor="interval-input">Set Interval</label>
         <input name="interval" id="interval-input" onChange={handleChange} />
         <button type="submit">Save</button>
       </form>
-      <button id="reset-btn" onClick={resetBoard}>Reset</button>
+      <button id="reset-btn" onClick={resetBoard}>
+        Reset
+      </button>
+      <button id="oscillator-btn" onClick={generateOscillators}>
+        Oscillators
+      </button>
+      <button id="still-life-btn" onClick={generateStillLife}>
+        Still Life
+      </button>
+      <button id="spaceship-btn" onClick={generateSpaceships}>
+        Spaceships
+      </button>
+      <button id="random-btn" onClick={generateRandom}>
+        Random
+      </button>
     </Fragment>
   );
 };
