@@ -4,10 +4,12 @@ import oscillators from "../helpers/oscillators";
 import stillLife from "../helpers/still-lifes";
 import spaceships from "../helpers/spaceships";
 import randomBoard from "../helpers/random-board";
+import styled from "styled-components";
 
 export default (props) => {
   const intervals = useRef(100);
   const start = useRef(false);
+  const back = useRef(false);
   const generation = useRef(0);
   const genInput = useRef();
   let w = 10;
@@ -15,8 +17,9 @@ export default (props) => {
   let rows;
   let board;
   let next;
-  let timeInterval;
-  let history = []
+  let forwardInterval;
+  let backwardInterval;
+  let history = [];
 
   useEffect(() => {
     const intervalInput = document.getElementById("interval-input");
@@ -39,34 +42,43 @@ export default (props) => {
         next[x][y] = 0;
       }
     }
-    setGameInterval();
+    setForwardInterval();
+    setBackwardInterval();
   };
 
   const draw = (p5) => {
     p5.clear();
-      for (let x = 0; x < columns; x++) {
-        for (let y = 0; y < rows; y++) {
-          let xpos = x * w;
-          let ypos = y * w;
+    for (let x = 0; x < columns; x++) {
+      for (let y = 0; y < rows; y++) {
+        let xpos = x * w;
+        let ypos = y * w;
 
-          if (board[x][y]) {
-            p5.fill(0);
-          } else {
-            p5.fill(255);
-          }
-
-          p5.stroke(0);
-          p5.rect(xpos, ypos, w, w);
+        if (board[x][y]) {
+          p5.fill(0);
+        } else {
+          p5.fill(255);
         }
+
+        p5.stroke(0);
+        p5.rect(xpos, ypos, w, w);
       }
+    }
 
     p5.colorMode(p5.RGB);
   };
 
-  const setGameInterval = () => {
-    timeInterval = setInterval(() => {
+  const setForwardInterval = () => {
+    forwardInterval = setInterval(() => {
       if (start.current) {
         generate();
+      }
+    }, intervals.current);
+  };
+
+  const setBackwardInterval = () => {
+    backwardInterval = setInterval(() => {
+      if (back.current) {
+        backtrack();
       }
     }, intervals.current);
   };
@@ -106,22 +118,22 @@ export default (props) => {
       }
     }
   }
-  
-  function generate(gen=null) {
+
+  function generate(gen = null) {
     let temp;
     let tempBoard = board;
-    if(gen != null && gen - generation.current >= 0){
+    if (gen != null && gen - generation.current >= 0) {
       gen -= generation.current;
-    } else if(gen != null && gen - generation.current < 0){
-      history = history.slice(0,gen+1);
-      board = history.pop()
+    } else if (gen != null && gen - generation.current < 0) {
+      history = history.slice(0, gen + 1);
+      board = history.pop();
       generation.current = gen;
       updateGeneration();
-      return
+      return;
     } else {
       gen = 1;
     }
-    
+
     while (gen > 0) {
       for (let x = 1; x < columns - 1; x++) {
         for (let y = 1; y < rows - 1; y++) {
@@ -131,7 +143,7 @@ export default (props) => {
               neighbors += tempBoard[x + i][y + j];
             }
           }
-          
+
           neighbors -= tempBoard[x][y];
           if (tempBoard[x][y] === 1 && neighbors < 2) next[x][y] = 0;
           else if (tempBoard[x][y] === 1 && neighbors > 3) next[x][y] = 0;
@@ -139,29 +151,28 @@ export default (props) => {
           else next[x][y] = tempBoard[x][y];
         }
       }
-      history.push(tempBoard.map(columns => columns.map(rows => rows)))
+      history.push(tempBoard.map((columns) => columns.map((rows) => rows)));
       temp = tempBoard;
       tempBoard = next;
       generation.current++;
       next = temp;
       gen -= 1;
     }
-    console.log(history);
+
     board = tempBoard;
     updateGeneration();
   }
 
   const backtrack = () => {
-    history = history.slice(0,generation.current)
-    if(history.length > 0){
+    history = history.slice(0, generation.current);
+    if (history.length > 0) {
       let temp = board;
       board = history.pop();
       next = temp;
-      console.log(board);
       generation.current--;
       updateGeneration();
     }
-  }
+  };
 
   const updateGeneration = () => {
     const generationText = document.getElementById("generation");
@@ -172,24 +183,57 @@ export default (props) => {
     return Math.floor(pos / w);
   };
 
-  const handleButtonClick = (e) => {
+  const playForwardClick = (e) => {
     e.preventDefault();
     start.current = !start.current;
 
     // assign button elements to variables
-    const button = document.getElementById("start-stop");
+    const forwardBtn = document.getElementById("play-forward");
+    const backwardBtn = document.getElementById("play-backward");
     const stepBtn = document.getElementById("step-btn");
+    const backBtn = document.getElementById("back-btn");
     const reset = document.getElementById("reset-btn");
 
     if (start.current) {
-      button.textContent = "Stop";
+      forwardBtn.innerHTML = "&#x25A0";
+      backwardBtn.setAttribute("disabled", true);
       reset.setAttribute("disabled", true);
       stepBtn.setAttribute("disabled", true);
+      backBtn.setAttribute("disabled", true);
       toggleGeneratorButtons(true);
     } else {
-      button.textContent = "Start";
+      forwardBtn.innerHTML = "&#9658;";
+      backwardBtn.removeAttribute("disabled");
       reset.removeAttribute("disabled");
       stepBtn.removeAttribute("disabled");
+      backBtn.removeAttribute("disabled");
+    }
+  };
+
+  const playBackwardClick = (e) => {
+    e.preventDefault();
+    back.current = !back.current;
+
+    // assign button elements to variables
+    const forwardBtn = document.getElementById("play-forward");
+    const backwardBtn = document.getElementById("play-backward");
+    const stepBtn = document.getElementById("step-btn");
+    const backBtn = document.getElementById("back-btn");
+    const reset = document.getElementById("reset-btn");
+
+    if (back.current) {
+      backwardBtn.innerHTML = "&#x25A0";
+      forwardBtn.setAttribute("disabled", true);
+      reset.setAttribute("disabled", true);
+      stepBtn.setAttribute("disabled", true);
+      backBtn.setAttribute("disabled", true);
+      toggleGeneratorButtons(true);
+    } else {
+      backwardBtn.innerHTML = "&#9668;";
+      forwardBtn.removeAttribute("disabled");
+      reset.removeAttribute("disabled");
+      stepBtn.removeAttribute("disabled");
+      backBtn.removeAttribute("disabled");
     }
   };
 
@@ -214,8 +258,10 @@ export default (props) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    clearInterval(timeInterval);
-    setGameInterval();
+    clearInterval(forwardInterval);
+    clearInterval(backwardInterval);
+    setForwardInterval();
+    setBackwardInterval();
   };
 
   const handleChange = (e) => {
@@ -230,7 +276,7 @@ export default (props) => {
           next[x][y] = 0;
         }
       }
-      history = []
+      history = [];
       generation.current = 0;
       updateGeneration();
       toggleGeneratorButtons();
@@ -263,57 +309,121 @@ export default (props) => {
   };
 
   return (
-    <Fragment>
-      <p>
-        Select the squares on the grid to set the cell as either dead or alive.
-        You can even drag the mouse to select many cells at a time.
-      </p>
-      <p>
-        After your done, you can press Start and watch as your cells come to
-        life.
-      </p>
-      <Sketch
-        setup={setup}
-        draw={draw}
-        mousePressed={mousePressed}
-        mouseDragged={mouseDragged}
-      />
-      <h4 id="generation">Generation: {generation.current}</h4>
+    <Container>
+      <h1>Conway's Game of Life</h1>
+      <GameWrapper>
+        <BoardWrapper>
+          <GenerationHeader id="generation">
+            Generation: {generation.current}
+          </GenerationHeader>
+          <button id="oscillator-btn" onClick={generateOscillators}>
+            Oscillators
+          </button>
+          <button id="still-life-btn" onClick={generateStillLife}>
+            Still Life
+          </button>
+          <button id="spaceship-btn" onClick={generateSpaceships}>
+            Spaceships
+          </button>
+          <button id="random-btn" onClick={generateRandom}>
+            Random
+          </button>
+          <Sketch
+            setup={setup}
+            draw={draw}
+            mousePressed={mousePressed}
+            mouseDragged={mouseDragged}
+          />
 
-      <button onClick={backtrack}>
-        Back
-      </button>
-      <button id="start-stop" onClick={handleButtonClick}>
-        Start
-      </button>
-      <button id="step-btn" onClick={() => generate()}>
-        Next
-      </button>
-      <form onSubmit={handleGenSubmit}>
-        <label htmlFor="gen-input">Goto Gen: </label>
-        <input id="gen-input" name="gen-input" onChange={handleGenInput} />
-        <button type="submit">Go</button>
-      </form>
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="interval-input">Set Interval</label>
-        <input name="interval" id="interval-input" onChange={handleChange} />
-        <button type="submit">Save</button>
-      </form>
-      <button id="reset-btn" onClick={resetBoard}>
-        Reset
-      </button>
-      <button id="oscillator-btn" onClick={generateOscillators}>
-        Oscillators
-      </button>
-      <button id="still-life-btn" onClick={generateStillLife}>
-        Still Life
-      </button>
-      <button id="spaceship-btn" onClick={generateSpaceships}>
-        Spaceships
-      </button>
-      <button id="random-btn" onClick={generateRandom}>
-        Random
-      </button>
-    </Fragment>
+          <button id="back-btn" onClick={backtrack}>
+            &#9668;&#9668;
+          </button>
+          <button id="play-backward" onClick={playBackwardClick}>
+            &#9668;
+          </button>
+          <button id="play-forward" onClick={playForwardClick}>
+            &#9658;
+          </button>
+          <button id="step-btn" onClick={() => generate()}>
+            &#9658;&#9658;
+          </button>
+          <button id="reset-btn" onClick={resetBoard}>
+            Reset
+          </button>
+          <FormWrapper>
+            <form onSubmit={handleGenSubmit}>
+              <label htmlFor="gen-input">Jump to generation: </label>
+              <InputWrapper>
+                <input
+                  id="gen-input"
+                  name="gen-input"
+                  onChange={handleGenInput}
+                />
+                <button type="submit">Go</button>
+              </InputWrapper>
+            </form>
+            <form onSubmit={handleSubmit}>
+              <label htmlFor="interval-input">Set speed in milliseconds</label>
+              <InputWrapper>
+                <input
+                  name="interval"
+                  id="interval-input"
+                  onChange={handleChange}
+                />
+                <button type="submit">Save</button>
+              </InputWrapper>
+            </form>
+          </FormWrapper>
+        </BoardWrapper>
+        <RulesWrapper>
+          <h2>Rules</h2>
+          <ul style={{ paddingInlineStart: "20px" }}>
+            <li>
+              If the cell is alive and has 2 or 3 neighbors, then it remains
+              alive. Else it dies.
+            </li>
+            <li>
+              If the cell is dead and has exactly 3 neighbors, then it comes to
+              life. Else if remains dead.
+            </li>
+          </ul>
+        </RulesWrapper>
+      </GameWrapper>
+    </Container>
   );
 };
+
+const Container = styled.div`
+  width: 100%;
+  text-align: center;
+`;
+
+const GameWrapper = styled.div`
+  display: flex;
+  max-width: 820px;
+  margin: 0 auto;
+`;
+
+const GenerationHeader = styled.h4`
+  text-align: center;
+`;
+
+const BoardWrapper = styled.div`
+  margin-right: 15px;
+`;
+
+const RulesWrapper = styled.div`
+  text-align: left;
+  margin-top: 50px;
+  margin-left: 15px;
+`;
+
+const InputWrapper = styled.div`
+  display: flex;
+  margin-right: 20px;
+`;
+
+const FormWrapper = styled.div`
+  display: flex;
+  text-align: left;
+`;
