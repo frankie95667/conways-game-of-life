@@ -63,8 +63,8 @@ export default (props) => {
         p5.rect(xpos, ypos, w, w);
       }
     }
-    
-    if(start.current || back.current || p5.mouseIsPressed){
+
+    if (start.current || back.current || p5.mouseIsPressed) {
       p5.loop();
     } else {
       p5.noLoop();
@@ -102,7 +102,7 @@ export default (props) => {
   }
 
   function mousePressed(p5) {
-    p5.loop()
+    p5.loop();
     if (!start.current && insideBoard(p5)) {
       let xx = Number(postToCellCoords(w, p5.mouseX));
       let yy = Number(postToCellCoords(w, p5.mouseY));
@@ -301,19 +301,27 @@ export default (props) => {
   };
 
   const generateOscillators = () => {
-    board = oscillators(columns, rows);
+    if (!start.current && !back.current) {
+      board = oscillators(columns, rows);
+    }
   };
 
   const generateStillLife = () => {
-    board = stillLife(columns, rows);
+    if (!start.current && !back.current) {
+      board = stillLife(columns, rows);
+    }
   };
 
   const generateSpaceships = () => {
-    board = spaceships(columns, rows);
+    if (!start.current && !back.current) {
+      board = spaceships(columns, rows);
+    }
   };
 
   const generateRandom = () => {
-    board = randomBoard(columns, rows);
+    if (!start.current && !back.current) {
+      board = randomBoard(columns, rows);
+    }
   };
 
   return (
@@ -324,64 +332,12 @@ export default (props) => {
           <GenerationHeader id="generation">
             Generation: {generation.current}
           </GenerationHeader>
-          <button id="oscillator-btn" onClick={generateOscillators}>
-            Oscillators
-          </button>
-          <button id="still-life-btn" onClick={generateStillLife}>
-            Still Life
-          </button>
-          <button id="spaceship-btn" onClick={generateSpaceships}>
-            Spaceships
-          </button>
-          <button id="random-btn" onClick={generateRandom}>
-            Random
-          </button>
-          <Sketch
+          <GameCanvas
             setup={setup}
             draw={draw}
             mousePressed={mousePressed}
             mouseDragged={mouseDragged}
           />
-
-          <button id="back-btn" onClick={backtrack}>
-            &#9668;&#9668;
-          </button>
-          <button id="play-backward" onClick={playBackwardClick}>
-            &#9668;
-          </button>
-          <button id="play-forward" onClick={playForwardClick}>
-            &#9658;
-          </button>
-          <button id="step-btn" onClick={() => generate()}>
-            &#9658;&#9658;
-          </button>
-          <button id="reset-btn" onClick={resetBoard}>
-            Reset
-          </button>
-          <FormWrapper>
-            <form onSubmit={handleGenSubmit}>
-              <label htmlFor="gen-input">Jump to generation: </label>
-              <InputWrapper>
-                <input
-                  id="gen-input"
-                  name="gen-input"
-                  onChange={handleGenInput}
-                />
-                <button type="submit">Go</button>
-              </InputWrapper>
-            </form>
-            <form onSubmit={handleSubmit}>
-              <label htmlFor="interval-input">Set speed in milliseconds</label>
-              <InputWrapper>
-                <input
-                  name="interval"
-                  id="interval-input"
-                  onChange={handleChange}
-                />
-                <button type="submit">Save</button>
-              </InputWrapper>
-            </form>
-          </FormWrapper>
         </BoardWrapper>
         <RulesWrapper>
           <h2>Rules</h2>
@@ -395,8 +351,78 @@ export default (props) => {
               life. Else if remains dead.
             </li>
           </ul>
+          <div style={{display: "flex", justifyContent: "flex-start", flexWrap: "wrap"}}>
+          <h3 style={{marginTop: "5px", marginBottom: "5px", width: "100%", textAlign: "left"}}>Auto-Generated Boards</h3>
+          <GeneratorButtons>
+            <div>
+              <h5>Pulsars</h5>
+              <button id="oscillator-btn" onClick={generateOscillators}>
+                <PreGenImg src="Game_of_life_pulsar.gif" />
+              </button>
+            </div>
+            <div>
+              <h5>Still Life</h5>
+              <button id="still-life-btn" onClick={generateStillLife}>
+                <PreGenImg src="1024px-Game_of_life_block_with_border.svg.png" />
+              </button>
+            </div>
+            <div>
+              <h5>Spaceships</h5>
+              <button id="spaceship-btn" onClick={generateSpaceships}>
+                <PreGenImg src="Animated_Hwss.gif" />
+              </button>
+            </div>
+            <div>
+              <h5>Random</h5>
+              <button id="random-btn" onClick={generateRandom}>
+                <PreGenImg src="Game_of_life_random.png" />
+              </button>
+            </div>
+          </GeneratorButtons>
+          </div>
         </RulesWrapper>
       </GameWrapper>
+      <ButtonsWrapper>
+        <button id="back-btn" onClick={backtrack}>
+          &#9668;&#9668;
+        </button>
+        <button id="play-backward" onClick={playBackwardClick}>
+          &#9668;
+        </button>
+        <button id="play-forward" onClick={playForwardClick}>
+          &#9658;
+        </button>
+        <button id="step-btn" onClick={() => generate()}>
+          &#9658;&#9658;
+        </button>
+        <button id="reset-btn" onClick={resetBoard}>
+          Reset
+        </button>
+        <FormWrapper>
+          <form onSubmit={handleGenSubmit}>
+            <label htmlFor="gen-input">Jump to generation: </label>
+            <InputWrapper>
+              <input
+                id="gen-input"
+                name="gen-input"
+                onChange={handleGenInput}
+              />
+              <button type="submit">Go</button>
+            </InputWrapper>
+          </form>
+          <form onSubmit={handleSubmit}>
+            <label htmlFor="interval-input">Set speed in milliseconds</label>
+            <InputWrapper>
+              <input
+                name="interval"
+                id="interval-input"
+                onChange={handleChange}
+              />
+              <button type="submit">Save</button>
+            </InputWrapper>
+          </form>
+        </FormWrapper>
+      </ButtonsWrapper>
     </Container>
   );
 };
@@ -409,7 +435,7 @@ const Container = styled.div`
 const GameWrapper = styled.div`
   display: flex;
   max-width: 820px;
-  margin: 0 auto;
+  margin: 0 auto 20px auto;
 `;
 
 const GenerationHeader = styled.h4`
@@ -418,12 +444,14 @@ const GenerationHeader = styled.h4`
 
 const BoardWrapper = styled.div`
   margin-right: 15px;
+  width: 50%;
 `;
 
 const RulesWrapper = styled.div`
   text-align: left;
-  margin-top: 50px;
+  margin-top: 0px;
   margin-left: 15px;
+  width: 50%;
 `;
 
 const InputWrapper = styled.div`
@@ -434,4 +462,33 @@ const InputWrapper = styled.div`
 const FormWrapper = styled.div`
   display: flex;
   text-align: left;
+  justify-content: center;
+  margin-top: 15px;
+`;
+
+const ButtonsWrapper = styled.div`
+  width: 820px;
+  text-align: center;
+  margin: 0 auto;
+`;
+
+const GameCanvas = styled(Sketch)`
+  margin-top: 10px;
+`;
+
+const PreGenImg = styled.img`
+  height: 64px;
+  width: auto;
+`;
+
+const GeneratorButtons = styled.div`
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  width: 250px;
+  text-align: center;
+
+  h5 {
+    margin-top: 10px;
+  }
 `;
