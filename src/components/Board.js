@@ -4,10 +4,12 @@ import oscillators from "../helpers/oscillators";
 import stillLife from "../helpers/still-lifes";
 import spaceships from "../helpers/spaceships";
 import randomBoard from "../helpers/random-board";
+import {PlayArrow, Stop} from "@material-ui/icons";
 
 export default (props) => {
   const intervals = useRef(100);
   const start = useRef(false);
+  const back = useRef(false);
   const generation = useRef(0);
   const genInput = useRef();
   let w = 10;
@@ -15,7 +17,8 @@ export default (props) => {
   let rows;
   let board;
   let next;
-  let timeInterval;
+  let forwardInterval;
+  let backwardInterval;
   let history = []
 
   useEffect(() => {
@@ -39,7 +42,8 @@ export default (props) => {
         next[x][y] = 0;
       }
     }
-    setGameInterval();
+      setForwardInterval();
+      setBackwardInterval();
   };
 
   const draw = (p5) => {
@@ -63,12 +67,20 @@ export default (props) => {
     p5.colorMode(p5.RGB);
   };
 
-  const setGameInterval = () => {
-    timeInterval = setInterval(() => {
+  const setForwardInterval = () => {
+    forwardInterval = setInterval(() => {
       if (start.current) {
         generate();
       }
     }, intervals.current);
+  };
+
+  const setBackwardInterval = () => {
+    backwardInterval = setInterval(() => {
+      if (back.current) {
+        backtrack();
+      }
+    }, intervals.current)
   };
 
   function insideBoard(p5) {
@@ -146,7 +158,7 @@ export default (props) => {
       next = temp;
       gen -= 1;
     }
-    console.log(history);
+
     board = tempBoard;
     updateGeneration();
   }
@@ -157,7 +169,6 @@ export default (props) => {
       let temp = board;
       board = history.pop();
       next = temp;
-      console.log(board);
       generation.current--;
       updateGeneration();
     }
@@ -171,34 +182,67 @@ export default (props) => {
   const postToCellCoords = (w, pos) => {
     return Math.floor(pos / w);
   };
-
-  const handleButtonClick = (e) => {
+  
+  const playForwardClick = (e) => {
     e.preventDefault();
     start.current = !start.current;
 
     // assign button elements to variables
-    const button = document.getElementById("start-stop");
+    const forwardBtn = document.getElementById("play-forward");
+    const backwardBtn = document.getElementById("play-backward");
     const stepBtn = document.getElementById("step-btn");
+    const backBtn = document.getElementById("back-btn");
     const reset = document.getElementById("reset-btn");
-
+    
     if (start.current) {
-      button.textContent = "Stop";
+      forwardBtn.innerHTML = "&#x25A0";
+      backwardBtn.setAttribute("disabled", true);
       reset.setAttribute("disabled", true);
       stepBtn.setAttribute("disabled", true);
+      backBtn.setAttribute("disabled", true);
       toggleGeneratorButtons(true);
     } else {
-      button.textContent = "Start";
+      forwardBtn.innerHTML = "&#9658;";
+      backwardBtn.removeAttribute("disabled");
       reset.removeAttribute("disabled");
       stepBtn.removeAttribute("disabled");
+      backBtn.removeAttribute("disabled");
     }
   };
 
+  const playBackwardClick = (e) => {
+    e.preventDefault();
+    back.current = !back.current;
+
+    // assign button elements to variables
+    const forwardBtn = document.getElementById("play-forward");
+    const backwardBtn = document.getElementById("play-backward");
+    const stepBtn = document.getElementById("step-btn");
+    const backBtn = document.getElementById("back-btn");
+    const reset = document.getElementById("reset-btn");
+
+    if (back.current) {
+      backwardBtn.innerHTML = "&#x25A0";
+      forwardBtn.setAttribute("disabled", true);
+      reset.setAttribute("disabled", true);
+      stepBtn.setAttribute("disabled", true);
+      backBtn.setAttribute("disabled", true);
+      toggleGeneratorButtons(true);
+    } else {
+      backwardBtn.innerHTML = "&#9668;";
+      forwardBtn.removeAttribute("disabled");
+      reset.removeAttribute("disabled");
+      stepBtn.removeAttribute("disabled");
+      backBtn.removeAttribute("disabled");
+    }
+  };
+  
   const toggleGeneratorButtons = (set = false) => {
     const oscillatorBtn = document.getElementById("oscillator-btn");
     const stillLifeBtn = document.getElementById("still-life-btn");
     const spaceshipBtn = document.getElementById("spaceship-btn");
     const randomBtn = document.getElementById("random-btn");
-
+    
     if (set) {
       oscillatorBtn.setAttribute("disabled", true);
       stillLifeBtn.setAttribute("disabled", true);
@@ -214,8 +258,10 @@ export default (props) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    clearInterval(timeInterval);
-    setGameInterval();
+    clearInterval(forwardInterval);
+    clearInterval(backwardInterval);
+    setForwardInterval();
+    setBackwardInterval();
   };
 
   const handleChange = (e) => {
@@ -280,14 +326,17 @@ export default (props) => {
       />
       <h4 id="generation">Generation: {generation.current}</h4>
 
-      <button onClick={backtrack}>
-        Back
+      <button id="back-btn" onClick={backtrack}>
+        &#9668;&#9668;
       </button>
-      <button id="start-stop" onClick={handleButtonClick}>
-        Start
+      <button id="play-backward" onClick={playBackwardClick}>
+        &#9668;
+      </button>
+      <button id="play-forward" onClick={playForwardClick}>
+        &#9658;
       </button>
       <button id="step-btn" onClick={() => generate()}>
-        Next
+        &#9658;&#9658;
       </button>
       <form onSubmit={handleGenSubmit}>
         <label htmlFor="gen-input">Goto Gen: </label>
