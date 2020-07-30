@@ -4,7 +4,7 @@ import oscillators from "../helpers/oscillators";
 import stillLife from "../helpers/still-lifes";
 import spaceships from "../helpers/spaceships";
 import randomBoard from "../helpers/random-board";
-import {PlayArrow, Stop} from "@material-ui/icons";
+import styled from "styled-components";
 
 export default (props) => {
   const intervals = useRef(100);
@@ -19,7 +19,7 @@ export default (props) => {
   let next;
   let forwardInterval;
   let backwardInterval;
-  let history = []
+  let history = [];
 
   useEffect(() => {
     const intervalInput = document.getElementById("interval-input");
@@ -42,27 +42,27 @@ export default (props) => {
         next[x][y] = 0;
       }
     }
-      setForwardInterval();
-      setBackwardInterval();
+    setForwardInterval();
+    setBackwardInterval();
   };
 
   const draw = (p5) => {
     p5.clear();
-      for (let x = 0; x < columns; x++) {
-        for (let y = 0; y < rows; y++) {
-          let xpos = x * w;
-          let ypos = y * w;
+    for (let x = 0; x < columns; x++) {
+      for (let y = 0; y < rows; y++) {
+        let xpos = x * w;
+        let ypos = y * w;
 
-          if (board[x][y]) {
-            p5.fill(0);
-          } else {
-            p5.fill(255);
-          }
-
-          p5.stroke(0);
-          p5.rect(xpos, ypos, w, w);
+        if (board[x][y]) {
+          p5.fill(0);
+        } else {
+          p5.fill(255);
         }
+
+        p5.stroke(0);
+        p5.rect(xpos, ypos, w, w);
       }
+    }
 
     p5.colorMode(p5.RGB);
   };
@@ -80,7 +80,7 @@ export default (props) => {
       if (back.current) {
         backtrack();
       }
-    }, intervals.current)
+    }, intervals.current);
   };
 
   function insideBoard(p5) {
@@ -118,22 +118,22 @@ export default (props) => {
       }
     }
   }
-  
-  function generate(gen=null) {
+
+  function generate(gen = null) {
     let temp;
     let tempBoard = board;
-    if(gen != null && gen - generation.current >= 0){
+    if (gen != null && gen - generation.current >= 0) {
       gen -= generation.current;
-    } else if(gen != null && gen - generation.current < 0){
-      history = history.slice(0,gen+1);
-      board = history.pop()
+    } else if (gen != null && gen - generation.current < 0) {
+      history = history.slice(0, gen + 1);
+      board = history.pop();
       generation.current = gen;
       updateGeneration();
-      return
+      return;
     } else {
       gen = 1;
     }
-    
+
     while (gen > 0) {
       for (let x = 1; x < columns - 1; x++) {
         for (let y = 1; y < rows - 1; y++) {
@@ -143,7 +143,7 @@ export default (props) => {
               neighbors += tempBoard[x + i][y + j];
             }
           }
-          
+
           neighbors -= tempBoard[x][y];
           if (tempBoard[x][y] === 1 && neighbors < 2) next[x][y] = 0;
           else if (tempBoard[x][y] === 1 && neighbors > 3) next[x][y] = 0;
@@ -151,7 +151,7 @@ export default (props) => {
           else next[x][y] = tempBoard[x][y];
         }
       }
-      history.push(tempBoard.map(columns => columns.map(rows => rows)))
+      history.push(tempBoard.map((columns) => columns.map((rows) => rows)));
       temp = tempBoard;
       tempBoard = next;
       generation.current++;
@@ -164,15 +164,15 @@ export default (props) => {
   }
 
   const backtrack = () => {
-    history = history.slice(0,generation.current)
-    if(history.length > 0){
+    history = history.slice(0, generation.current);
+    if (history.length > 0) {
       let temp = board;
       board = history.pop();
       next = temp;
       generation.current--;
       updateGeneration();
     }
-  }
+  };
 
   const updateGeneration = () => {
     const generationText = document.getElementById("generation");
@@ -182,7 +182,7 @@ export default (props) => {
   const postToCellCoords = (w, pos) => {
     return Math.floor(pos / w);
   };
-  
+
   const playForwardClick = (e) => {
     e.preventDefault();
     start.current = !start.current;
@@ -193,7 +193,7 @@ export default (props) => {
     const stepBtn = document.getElementById("step-btn");
     const backBtn = document.getElementById("back-btn");
     const reset = document.getElementById("reset-btn");
-    
+
     if (start.current) {
       forwardBtn.innerHTML = "&#x25A0";
       backwardBtn.setAttribute("disabled", true);
@@ -236,13 +236,13 @@ export default (props) => {
       backBtn.removeAttribute("disabled");
     }
   };
-  
+
   const toggleGeneratorButtons = (set = false) => {
     const oscillatorBtn = document.getElementById("oscillator-btn");
     const stillLifeBtn = document.getElementById("still-life-btn");
     const spaceshipBtn = document.getElementById("spaceship-btn");
     const randomBtn = document.getElementById("random-btn");
-    
+
     if (set) {
       oscillatorBtn.setAttribute("disabled", true);
       stillLifeBtn.setAttribute("disabled", true);
@@ -276,7 +276,7 @@ export default (props) => {
           next[x][y] = 0;
         }
       }
-      history = []
+      history = [];
       generation.current = 0;
       updateGeneration();
       toggleGeneratorButtons();
@@ -309,60 +309,121 @@ export default (props) => {
   };
 
   return (
-    <Fragment>
-      <p>
-        Select the squares on the grid to set the cell as either dead or alive.
-        You can even drag the mouse to select many cells at a time.
-      </p>
-      <p>
-        After your done, you can press Start and watch as your cells come to
-        life.
-      </p>
-      <Sketch
-        setup={setup}
-        draw={draw}
-        mousePressed={mousePressed}
-        mouseDragged={mouseDragged}
-      />
-      <h4 id="generation">Generation: {generation.current}</h4>
+    <Container>
+      <h1>Conway's Game of Life</h1>
+      <GameWrapper>
+        <BoardWrapper>
+          <GenerationHeader id="generation">
+            Generation: {generation.current}
+          </GenerationHeader>
+          <button id="oscillator-btn" onClick={generateOscillators}>
+            Oscillators
+          </button>
+          <button id="still-life-btn" onClick={generateStillLife}>
+            Still Life
+          </button>
+          <button id="spaceship-btn" onClick={generateSpaceships}>
+            Spaceships
+          </button>
+          <button id="random-btn" onClick={generateRandom}>
+            Random
+          </button>
+          <Sketch
+            setup={setup}
+            draw={draw}
+            mousePressed={mousePressed}
+            mouseDragged={mouseDragged}
+          />
 
-      <button id="back-btn" onClick={backtrack}>
-        &#9668;&#9668;
-      </button>
-      <button id="play-backward" onClick={playBackwardClick}>
-        &#9668;
-      </button>
-      <button id="play-forward" onClick={playForwardClick}>
-        &#9658;
-      </button>
-      <button id="step-btn" onClick={() => generate()}>
-        &#9658;&#9658;
-      </button>
-      <form onSubmit={handleGenSubmit}>
-        <label htmlFor="gen-input">Goto Gen: </label>
-        <input id="gen-input" name="gen-input" onChange={handleGenInput} />
-        <button type="submit">Go</button>
-      </form>
-      <form onSubmit={handleSubmit}>
-        <label htmlFor="interval-input">Set Interval</label>
-        <input name="interval" id="interval-input" onChange={handleChange} />
-        <button type="submit">Save</button>
-      </form>
-      <button id="reset-btn" onClick={resetBoard}>
-        Reset
-      </button>
-      <button id="oscillator-btn" onClick={generateOscillators}>
-        Oscillators
-      </button>
-      <button id="still-life-btn" onClick={generateStillLife}>
-        Still Life
-      </button>
-      <button id="spaceship-btn" onClick={generateSpaceships}>
-        Spaceships
-      </button>
-      <button id="random-btn" onClick={generateRandom}>
-        Random
-      </button>
-    </Fragment>
+          <button id="back-btn" onClick={backtrack}>
+            &#9668;&#9668;
+          </button>
+          <button id="play-backward" onClick={playBackwardClick}>
+            &#9668;
+          </button>
+          <button id="play-forward" onClick={playForwardClick}>
+            &#9658;
+          </button>
+          <button id="step-btn" onClick={() => generate()}>
+            &#9658;&#9658;
+          </button>
+          <button id="reset-btn" onClick={resetBoard}>
+            Reset
+          </button>
+          <FormWrapper>
+            <form onSubmit={handleGenSubmit}>
+              <label htmlFor="gen-input">Jump to generation: </label>
+              <InputWrapper>
+                <input
+                  id="gen-input"
+                  name="gen-input"
+                  onChange={handleGenInput}
+                />
+                <button type="submit">Go</button>
+              </InputWrapper>
+            </form>
+            <form onSubmit={handleSubmit}>
+              <label htmlFor="interval-input">Set speed in milliseconds</label>
+              <InputWrapper>
+                <input
+                  name="interval"
+                  id="interval-input"
+                  onChange={handleChange}
+                />
+                <button type="submit">Save</button>
+              </InputWrapper>
+            </form>
+          </FormWrapper>
+        </BoardWrapper>
+        <RulesWrapper>
+          <h2>Rules</h2>
+          <ul style={{ paddingInlineStart: "20px" }}>
+            <li>
+              If the cell is alive and has 2 or 3 neighbors, then it remains
+              alive. Else it dies.
+            </li>
+            <li>
+              If the cell is dead and has exactly 3 neighbors, then it comes to
+              life. Else if remains dead.
+            </li>
+          </ul>
+        </RulesWrapper>
+      </GameWrapper>
+    </Container>
   );
 };
+
+const Container = styled.div`
+  width: 100%;
+  text-align: center;
+`;
+
+const GameWrapper = styled.div`
+  display: flex;
+  max-width: 820px;
+  margin: 0 auto;
+`;
+
+const GenerationHeader = styled.h4`
+  text-align: center;
+`;
+
+const BoardWrapper = styled.div`
+  margin-right: 15px;
+`;
+
+const RulesWrapper = styled.div`
+  text-align: left;
+  margin-top: 50px;
+  margin-left: 15px;
+`;
+
+const InputWrapper = styled.div`
+  display: flex;
+  margin-right: 20px;
+`;
+
+const FormWrapper = styled.div`
+  display: flex;
+  text-align: left;
+`;
