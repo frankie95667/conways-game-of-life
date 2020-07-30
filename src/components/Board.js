@@ -9,6 +9,7 @@ export default (props) => {
   const intervals = useRef(100);
   const start = useRef(false);
   const generation = useRef(0);
+  const genInput = useRef();
   let w = 10;
   let columns;
   let rows;
@@ -22,7 +23,7 @@ export default (props) => {
   }, []);
 
   const setup = (p5, canvasParentRef) => {
-    p5.createCanvas(600, 600).parent(canvasParentRef);
+    p5.createCanvas(400, 400).parent(canvasParentRef);
     columns = p5.width / w;
     rows = p5.height / w;
     board = new Array(columns);
@@ -41,23 +42,22 @@ export default (props) => {
   };
 
   const draw = (p5) => {
-    p5.background(240);
+    p5.clear();
+      for (let x = 0; x < columns; x++) {
+        for (let y = 0; y < rows; y++) {
+          let xpos = x * w;
+          let ypos = y * w;
 
-    for (let x = 0; x < columns; x++) {
-      for (let y = 0; y < rows; y++) {
-        let xpos = x * w;
-        let ypos = y * w;
+          if (board[x][y]) {
+            p5.fill(0);
+          } else {
+            p5.fill(255);
+          }
 
-        if (board[x][y]) {
-          p5.fill(0);
-        } else {
-          p5.fill(255);
+          p5.stroke(0);
+          p5.rect(xpos, ypos, w, w);
         }
-
-        p5.stroke(0);
-        p5.rect(xpos, ypos, w, w);
       }
-    }
 
     p5.colorMode(p5.RGB);
   };
@@ -106,29 +106,42 @@ export default (props) => {
     }
   }
 
-  function generate() {
-    for (let x = 1; x < columns - 1; x++) {
-      for (let y = 1; y < rows - 1; y++) {
-        let neighbors = 0;
-        for (let i = -1; i <= 1; i++) {
-          for (let j = -1; j <= 1; j++) {
-            neighbors += board[x + i][y + j];
-          }
-        }
-
-        neighbors -= board[x][y];
-        if (board[x][y] === 1 && neighbors < 2) next[x][y] = 0;
-        else if (board[x][y] === 1 && neighbors > 3) next[x][y] = 0;
-        else if (board[x][y] === 0 && neighbors === 3) next[x][y] = 1;
-        else next[x][y] = board[x][y];
-      }
+  function generate(gen=null) {
+    let temp;
+    let tempBoard = board;
+    if(gen && gen - generation.current >= 0){
+      gen -= generation.current;
+    } else if(gen && gen - generation.current < 0){
+      gen = 0;
+    } else {
+      gen = 1;
     }
+    
+    while (gen > 0) {
+      for (let x = 1; x < columns - 1; x++) {
+        for (let y = 1; y < rows - 1; y++) {
+          let neighbors = 0;
+          for (let i = -1; i <= 1; i++) {
+            for (let j = -1; j <= 1; j++) {
+              neighbors += tempBoard[x + i][y + j];
+            }
+          }
 
-    let temp = board;
-    board = next;
-    generation.current++;
+          neighbors -= tempBoard[x][y];
+          if (tempBoard[x][y] === 1 && neighbors < 2) next[x][y] = 0;
+          else if (tempBoard[x][y] === 1 && neighbors > 3) next[x][y] = 0;
+          else if (tempBoard[x][y] === 0 && neighbors === 3) next[x][y] = 1;
+          else next[x][y] = tempBoard[x][y];
+        }
+      }
+      temp = tempBoard;
+      tempBoard = next;
+      generation.current++;
+      next = temp;
+      gen -= 1;
+    }
+    board = tempBoard;
     updateGeneration();
-    next = temp;
   }
 
   const updateGeneration = () => {
@@ -148,7 +161,7 @@ export default (props) => {
     const button = document.getElementById("start-stop");
     const stepBtn = document.getElementById("step-btn");
     const reset = document.getElementById("reset-btn");
-   
+
     if (start.current) {
       button.textContent = "Stop";
       reset.setAttribute("disabled", true);
@@ -161,13 +174,13 @@ export default (props) => {
     }
   };
 
-  const toggleGeneratorButtons = (set=false) => {
+  const toggleGeneratorButtons = (set = false) => {
     const oscillatorBtn = document.getElementById("oscillator-btn");
     const stillLifeBtn = document.getElementById("still-life-btn");
     const spaceshipBtn = document.getElementById("spaceship-btn");
     const randomBtn = document.getElementById("random-btn");
 
-    if(set){
+    if (set) {
       oscillatorBtn.setAttribute("disabled", true);
       stillLifeBtn.setAttribute("disabled", true);
       spaceshipBtn.setAttribute("disabled", true);
@@ -178,7 +191,7 @@ export default (props) => {
       spaceshipBtn.removeAttribute("disabled");
       randomBtn.removeAttribute("disabled");
     }
-  }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -202,6 +215,15 @@ export default (props) => {
       updateGeneration();
       toggleGeneratorButtons();
     }
+  };
+
+  const handleGenInput = (e) => {
+    genInput.current = Number(e.target.value);
+  };
+
+  const handleGenSubmit = (e) => {
+    e.preventDefault();
+    generate(genInput.current);
   };
 
   const generateOscillators = () => {
@@ -240,9 +262,14 @@ export default (props) => {
       <button id="start-stop" onClick={handleButtonClick}>
         Start
       </button>
-      <button id="step-btn" onClick={generate}>
+      <button id="step-btn" onClick={() => generate()}>
         Step
       </button>
+      <form onSubmit={handleGenSubmit}>
+        <label htmlFor="gen-input">Goto Gen: </label>
+        <input id="gen-input" name="gen-input" onChange={handleGenInput} />
+        <button type="submit">Go</button>
+      </form>
       <form onSubmit={handleSubmit}>
         <label htmlFor="interval-input">Set Interval</label>
         <input name="interval" id="interval-input" onChange={handleChange} />
