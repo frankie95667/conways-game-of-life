@@ -63,8 +63,14 @@ export default (props) => {
         p5.rect(xpos, ypos, w, w);
       }
     }
+    
+    if(start.current || back.current || p5.mouseIsPressed){
+      p5.loop();
+    } else {
+      p5.noLoop();
+    }
 
-    p5.colorMode(p5.RGB);
+    // p5.colorMode(p5.RGB);
   };
 
   const setForwardInterval = () => {
@@ -96,6 +102,7 @@ export default (props) => {
   }
 
   function mousePressed(p5) {
+    p5.loop()
     if (!start.current && insideBoard(p5)) {
       let xx = Number(postToCellCoords(w, p5.mouseX));
       let yy = Number(postToCellCoords(w, p5.mouseY));
@@ -108,6 +115,7 @@ export default (props) => {
   }
 
   function mouseDragged(p5) {
+    p5.loop();
     if (!start.current && insideBoard(p5)) {
       let xx = Number(postToCellCoords(w, p5.mouseX));
       let yy = Number(postToCellCoords(w, p5.mouseY));
