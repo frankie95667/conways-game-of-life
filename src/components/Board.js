@@ -16,6 +16,7 @@ export default (props) => {
   let board;
   let next;
   let timeInterval;
+  let history = []
 
   useEffect(() => {
     const intervalInput = document.getElementById("interval-input");
@@ -105,14 +106,18 @@ export default (props) => {
       }
     }
   }
-
+  
   function generate(gen=null) {
     let temp;
     let tempBoard = board;
-    if(gen && gen - generation.current >= 0){
+    if(gen != null && gen - generation.current >= 0){
       gen -= generation.current;
-    } else if(gen && gen - generation.current < 0){
-      gen = 0;
+    } else if(gen != null && gen - generation.current < 0){
+      history = history.slice(0,gen+1);
+      board = history.pop()
+      generation.current = gen;
+      updateGeneration();
+      return
     } else {
       gen = 1;
     }
@@ -126,7 +131,7 @@ export default (props) => {
               neighbors += tempBoard[x + i][y + j];
             }
           }
-
+          
           neighbors -= tempBoard[x][y];
           if (tempBoard[x][y] === 1 && neighbors < 2) next[x][y] = 0;
           else if (tempBoard[x][y] === 1 && neighbors > 3) next[x][y] = 0;
@@ -134,14 +139,28 @@ export default (props) => {
           else next[x][y] = tempBoard[x][y];
         }
       }
+      history.push(tempBoard.map(columns => columns.map(rows => rows)))
       temp = tempBoard;
       tempBoard = next;
       generation.current++;
       next = temp;
       gen -= 1;
     }
+    console.log(history);
     board = tempBoard;
     updateGeneration();
+  }
+
+  const backtrack = () => {
+    history = history.slice(0,generation.current)
+    if(history.length > 0){
+      let temp = board;
+      board = history.pop();
+      next = temp;
+      console.log(board);
+      generation.current--;
+      updateGeneration();
+    }
   }
 
   const updateGeneration = () => {
@@ -211,6 +230,7 @@ export default (props) => {
           next[x][y] = 0;
         }
       }
+      history = []
       generation.current = 0;
       updateGeneration();
       toggleGeneratorButtons();
@@ -259,11 +279,15 @@ export default (props) => {
         mouseDragged={mouseDragged}
       />
       <h4 id="generation">Generation: {generation.current}</h4>
+
+      <button onClick={backtrack}>
+        Back
+      </button>
       <button id="start-stop" onClick={handleButtonClick}>
         Start
       </button>
       <button id="step-btn" onClick={() => generate()}>
-        Step
+        Next
       </button>
       <form onSubmit={handleGenSubmit}>
         <label htmlFor="gen-input">Goto Gen: </label>
