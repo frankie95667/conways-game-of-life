@@ -291,6 +291,7 @@ export default (props) => {
       }
       history = [];
       generation.current = 0;
+      p5Global.current.draw();
       updateGeneration();
       toggleGeneratorButtons();
     }
