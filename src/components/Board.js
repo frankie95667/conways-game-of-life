@@ -7,6 +7,7 @@ import randomBoard from "../helpers/random-board";
 import styled from "styled-components";
 
 export default (props) => {
+  const p5Global = useRef()
   const intervals = useRef(100);
   const start = useRef(false);
   const back = useRef(false);
@@ -27,6 +28,7 @@ export default (props) => {
   }, []);
 
   const setup = (p5, canvasParentRef) => {
+    p5Global.current = p5;
     p5.createCanvas(400, 400).parent(canvasParentRef);
     columns = p5.width / w;
     rows = p5.height / w;
@@ -48,8 +50,8 @@ export default (props) => {
 
   const draw = (p5) => {
     p5.clear();
-    for (let x = 0; x < columns; x++) {
-      for (let y = 0; y < rows; y++) {
+    for (let x = 1; x < columns - 1; x++) {
+      for (let y = 1; y < rows - 1; y++) {
         let xpos = x * w;
         let ypos = y * w;
 
@@ -64,11 +66,11 @@ export default (props) => {
       }
     }
 
-    if (start.current || back.current || p5.mouseIsPressed) {
-      p5.loop();
-    } else {
+    // if (start.current || back.current || p5.mouseIsPressed) {
+    //   p5.loop();
+    // } else {
       p5.noLoop();
-    }
+    // }
 
     // p5.colorMode(p5.RGB);
   };
@@ -102,7 +104,7 @@ export default (props) => {
   }
 
   function mousePressed(p5) {
-    p5.loop();
+    // p5.loop();
     if (!start.current && insideBoard(p5)) {
       let xx = Number(postToCellCoords(w, p5.mouseX));
       let yy = Number(postToCellCoords(w, p5.mouseY));
@@ -111,11 +113,12 @@ export default (props) => {
       } else {
         board[xx][yy] = 1;
       }
+      p5.draw();
     }
   }
 
   function mouseDragged(p5) {
-    p5.loop();
+    // p5.loop();
     if (!start.current && insideBoard(p5)) {
       let xx = Number(postToCellCoords(w, p5.mouseX));
       let yy = Number(postToCellCoords(w, p5.mouseY));
@@ -124,6 +127,7 @@ export default (props) => {
       } else {
         board[xx][yy] = 1;
       }
+      p5.draw();
     }
   }
 
@@ -134,7 +138,9 @@ export default (props) => {
       gen -= generation.current;
     } else if (gen != null && gen - generation.current < 0) {
       history = history.slice(0, gen + 1);
+      console.log(history);
       board = history.pop();
+      p5Global.current.draw();
       generation.current = gen;
       updateGeneration();
       return;
@@ -166,8 +172,8 @@ export default (props) => {
       next = temp;
       gen -= 1;
     }
-
     board = tempBoard;
+    p5Global.current.draw();
     updateGeneration();
   }
 
@@ -176,6 +182,7 @@ export default (props) => {
     if (history.length > 0) {
       let temp = board;
       board = history.pop();
+      p5Global.current.draw();
       next = temp;
       generation.current--;
       updateGeneration();
@@ -351,34 +358,49 @@ export default (props) => {
               life. Else if remains dead.
             </li>
           </ul>
-          <div style={{display: "flex", justifyContent: "flex-start", flexWrap: "wrap"}}>
-          <h3 style={{marginTop: "5px", marginBottom: "5px", width: "100%", textAlign: "left"}}>Auto-Generated Boards</h3>
-          <GeneratorButtons>
-            <div>
-              <h5>Pulsars</h5>
-              <button id="oscillator-btn" onClick={generateOscillators}>
-                <PreGenImg src="Game_of_life_pulsar.gif" />
-              </button>
-            </div>
-            <div>
-              <h5>Still Life</h5>
-              <button id="still-life-btn" onClick={generateStillLife}>
-                <PreGenImg src="1024px-Game_of_life_block_with_border.svg.png" />
-              </button>
-            </div>
-            <div>
-              <h5>Spaceships</h5>
-              <button id="spaceship-btn" onClick={generateSpaceships}>
-                <PreGenImg src="Animated_Hwss.gif" />
-              </button>
-            </div>
-            <div>
-              <h5>Random</h5>
-              <button id="random-btn" onClick={generateRandom}>
-                <PreGenImg src="Game_of_life_random.png" />
-              </button>
-            </div>
-          </GeneratorButtons>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-start",
+              flexWrap: "wrap",
+            }}
+          >
+            <h3
+              style={{
+                marginTop: "5px",
+                marginBottom: "5px",
+                width: "100%",
+                textAlign: "left",
+              }}
+            >
+              Auto-Generated Boards
+            </h3>
+            <GeneratorButtons>
+              <div>
+                <h5>Pulsars</h5>
+                <button id="oscillator-btn" onClick={generateOscillators}>
+                  <PreGenImg src="Game_of_life_pulsar.gif" />
+                </button>
+              </div>
+              <div>
+                <h5>Still Life</h5>
+                <button id="still-life-btn" onClick={generateStillLife}>
+                  <PreGenImg src="1024px-Game_of_life_block_with_border.svg.png" />
+                </button>
+              </div>
+              <div>
+                <h5>Spaceships</h5>
+                <button id="spaceship-btn" onClick={generateSpaceships}>
+                  <PreGenImg src="Animated_Hwss.gif" />
+                </button>
+              </div>
+              <div>
+                <h5>Random</h5>
+                <button id="random-btn" onClick={generateRandom}>
+                  <PreGenImg src="Game_of_life_random.png" />
+                </button>
+              </div>
+            </GeneratorButtons>
           </div>
         </RulesWrapper>
       </GameWrapper>
