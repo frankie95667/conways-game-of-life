@@ -49,7 +49,6 @@ export default (props) => {
   };
 
   const draw = (p5) => {
-    p5.clear();
     for (let x = 1; x < columns - 1; x++) {
       for (let y = 1; y < rows - 1; y++) {
         let xpos = x * w;
@@ -138,7 +137,6 @@ export default (props) => {
       gen -= generation.current;
     } else if (gen != null && gen - generation.current < 0) {
       history = history.slice(0, gen + 1);
-      console.log(history);
       board = history.pop();
       p5Global.current.draw();
       generation.current = gen;
@@ -178,7 +176,7 @@ export default (props) => {
   }
 
   const backtrack = () => {
-    history = history.slice(0, generation.current);
+    history = history.slice(0, generation.current + 1);
     if (history.length > 0) {
       let temp = board;
       board = history.pop();
@@ -310,24 +308,28 @@ export default (props) => {
   const generateOscillators = () => {
     if (!start.current && !back.current) {
       board = oscillators(columns, rows);
+      p5Global.current.draw()
     }
   };
 
   const generateStillLife = () => {
     if (!start.current && !back.current) {
       board = stillLife(columns, rows);
+      p5Global.current.draw()
     }
   };
 
   const generateSpaceships = () => {
     if (!start.current && !back.current) {
       board = spaceships(columns, rows);
+      p5Global.current.draw()
     }
   };
 
   const generateRandom = () => {
     if (!start.current && !back.current) {
       board = randomBoard(columns, rows);
+      p5Global.current.draw()
     }
   };
 
